@@ -36,7 +36,7 @@ By default ClipCase writes to `.clipcase/`. `clipcase init --storage notes/cases
   entries/20260101T000100Z-42bb79cf284a.md
 ```
 
-`index.json` stores stable IDs, timestamps, source labels, tags, hashes, byte counts, and relative Markdown paths.
+`index.json` stores stable IDs, timestamps, source labels, tags, hashes, byte counts, and relative Markdown paths. See [docs/STORAGE.md](docs/STORAGE.md) for details.
 
 ## Safety model
 
