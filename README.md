@@ -21,9 +21,9 @@ Linux and Windows users can pipe text on stdin. `--clipboard` uses `pbpaste`, `x
 - `clipcase init [--storage <path>]` creates `.clipcase.json` and the storage directory.
 - `clipcase new <case> [--title <title>]` creates a slugged case directory.
 - `clipcase add <case> [--source <label>] [--tag <tag>] [--clipboard] [--allow-secret]` stores stdin or clipboard text. Repeat `--tag` or pass comma-separated tags.
-- `clipcase list` prints case name, entry count, updated timestamp, and title.
+- `clipcase list [--json]` prints case name, entry count, updated timestamp, and title.
 - `clipcase show <case>` prints deterministic JSON metadata.
-- `clipcase search <query>` searches entry text, tags, and source labels offline.
+- `clipcase search <query> [--json]` searches entry text, tags, and source labels offline.
 - `clipcase export <case> [--out <file>]` produces a single Markdown bundle.
 
 ## Storage format
