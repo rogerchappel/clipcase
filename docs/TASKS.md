@@ -12,6 +12,7 @@
 ## Future backlog
 
 - [ ] Richer search output with snippets around matches.
+- [x] JSON output for list and search.
 - [ ] Optional JSON output for all commands.
 - [ ] Configurable secret rules.
 - [ ] Case rename and archive commands.
