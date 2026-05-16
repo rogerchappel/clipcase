@@ -8,6 +8,7 @@ node "$ROOT/dist/src/cli.js" init --storage .clipcase
 node "$ROOT/dist/src/cli.js" new bug-login --title "Login Bug"
 cat "$ROOT/fixtures/repro.txt" | node "$ROOT/dist/src/cli.js" add bug-login --source fixture --tag repro
 node "$ROOT/dist/src/cli.js" list | grep bug-login
+node "$ROOT/dist/src/cli.js" list --json | grep "bug-login"
 node "$ROOT/dist/src/cli.js" search expired | grep bug-login
 node "$ROOT/dist/src/cli.js" export bug-login --out case.md
 grep "Login Bug" case.md
