@@ -1,0 +1,4 @@
+Steps to reproduce:
+1. Open the login page.
+2. Submit an expired session cookie.
+3. Observe a 500 instead of a redirect.
