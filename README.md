@@ -52,6 +52,11 @@ npm test 2>&1 | clipcase add failing-test --source "npm test" --tag failure
 clipcase export failing-test --out handoff.md
 ```
 
+For a fuller copy-paste support workflow, see
+[examples/support-handoff-demo.md](examples/support-handoff-demo.md). A short,
+fact-grounded promotion pack lives in
+[docs/promo/social-hooks.md](docs/promo/social-hooks.md).
+
 ## Verify
 
 ```sh
