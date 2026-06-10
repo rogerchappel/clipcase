@@ -75,3 +75,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). Please do
 ## License
 
 MIT
+
+## Release verification
+
+Run the same checks locally before opening a release PR:
+
+```bash
+npm run check
+npm test
+npm run build
+npm run smoke
+npm run package:smoke
+npm run release:check
+```
