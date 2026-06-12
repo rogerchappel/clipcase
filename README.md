@@ -52,6 +52,20 @@ npm test 2>&1 | clipcase add failing-test --source "npm test" --tag failure
 clipcase export failing-test --out handoff.md
 ```
 
+For a reproducible fixture-backed handoff, run:
+
+```sh
+npm run build
+bash demo/run-bug-handoff.sh
+```
+
+The demo captures repro notes and terminal output from
+`examples/bug-handoff`, exports a Markdown handoff, and verifies that
+secret-like input is blocked by default.
+
+Promotion drafts for this workflow live in
+[docs/promo/social-hooks.md](docs/promo/social-hooks.md).
+
 ## Verify
 
 ```sh
