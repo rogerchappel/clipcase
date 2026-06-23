@@ -1,0 +1,8 @@
+$ npm test
+
+not ok 3 - clears expired login cookie before redirect
+  ---
+  expected: "/dashboard"
+  actual: "/login"
+  ...
+

@@ -70,6 +70,22 @@ the case store, exports Markdown, and verifies the exported handoff.
 - [Video brief](docs/promo/video-brief.md)
 - [Social hooks](docs/promo/social-hooks.md)
 
+For a reproducible fixture-backed handoff, run:
+
+```sh
+npm run build
+bash demo/run-bug-handoff.sh
+```
+
+The demo captures repro notes and terminal output from
+`examples/bug-handoff`, exports a Markdown handoff, and verifies that
+secret-like input is blocked by default.
+
+For a fuller copy-paste support workflow, see
+[examples/support-handoff-demo.md](examples/support-handoff-demo.md). A short,
+fact-grounded promotion pack lives in
+[docs/promo/social-hooks.md](docs/promo/social-hooks.md).
+
 ## Verify
 
 ```sh
@@ -88,3 +104,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). Please do
 ## License
 
 MIT
+
+## Release verification
+
+Run the same checks locally before opening a release PR:
+
+```bash
+npm run check
+npm test
+npm run build
+npm run smoke
+npm run package:smoke
+npm run release:check
+```
