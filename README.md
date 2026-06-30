@@ -86,6 +86,12 @@ For a fuller copy-paste support workflow, see
 fact-grounded promotion pack lives in
 [docs/promo/social-hooks.md](docs/promo/social-hooks.md).
 
+For a searchable support handoff that writes JSON, text, and Markdown artifacts,
+run `bash demo/run-search-pack.sh` and follow
+[docs/tutorials/searchable-support-handoff.md](docs/tutorials/searchable-support-handoff.md).
+The matching recording outline is
+[docs/promo/search-pack-video-brief.md](docs/promo/search-pack-video-brief.md).
+
 ## Verify
 
 ```sh
