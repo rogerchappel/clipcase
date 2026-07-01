@@ -52,6 +52,15 @@ npm test 2>&1 | clipcase add failing-test --source "npm test" --tag failure
 clipcase export failing-test --out handoff.md
 ```
 
+For a reproducible local demo that creates and verifies a handoff bundle, run:
+
+```sh
+bash demo/run-agent-handoff.sh
+```
+
+Promotion support drafts live in [docs/promo/video-brief-agent-handoff.md](docs/promo/video-brief-agent-handoff.md)
+and [docs/promo/social-hooks.md](docs/promo/social-hooks.md).
+
 ## Runnable demo
 
 Run a fixture-backed handoff demo from a clean temporary store:
