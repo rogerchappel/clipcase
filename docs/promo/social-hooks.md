@@ -1,0 +1,80 @@
+# ClipCase Social Hooks
+
+Grounded post drafts for the local-first casefile workflow. ClipCase turns
+copied context, terminal output, prompts, URLs, and repro notes into Markdown
+casefiles with transparent `.clipcase` storage, deterministic Markdown export,
+offline search, and conservative secret blocking.
+
+## Short Posts
+
+1. ClipCase turns pasted terminal output, repro notes, and prompt context into a deterministic Markdown casefile that stays on disk.
+2. Agent handoff recipe: `clipcase new failing-test`, pipe the failure into `clipcase add`, then `clipcase export failing-test --out handoff.md`.
+3. ClipCase blocks common secret-shaped input by default, so casefiles can be useful without encouraging accidental token dumps.
+4. The storage is transparent: one case directory, JSON metadata, and Markdown entries that are easy to inspect in git.
+
+## Agent Handoff Demo
+
+Run:
+
+```sh
+npm install
+bash demo/run-agent-handoff.sh
+```
+
+Show `.tmp/demo-agent-handoff/handoff.md`, then open the case directory to show the plain Markdown entry and deterministic metadata.
+
+## Guardrails
+
+- Do not claim ClipCase is a complete DLP or secrets-scanning product.
+- Keep the story on local-first capture, reviewable files, and intentional export.
+- Do not use real secrets or private customer data in examples.
+
+## Demo CTA
+
+```sh
+npm run build
+bash examples/run-agent-handoff-demo.sh
+```
+
+## Grounding facts
+
+- The demo uses `fixtures/repro.txt`.
+- Storage is initialized in a temporary directory.
+- The exported Markdown is checked for the case title and source label.
+
+## Short hooks
+
+- Turn a messy clipboard trail into a Markdown handoff without adding a sync
+  service.
+- Pipe terminal output into `clipcase add`, tag it, search it offline, then
+  export one deterministic casefile.
+- Useful agent handoffs are often just the right repro notes plus the right
+  terminal output. ClipCase keeps both in plain files.
+- The default safety model is local-first: no watcher, no hosted service, and
+  likely secrets are blocked unless you explicitly allow them.
+
+## Demo beats
+
+1. `clipcase init` creates transparent local storage.
+2. `clipcase new login-redirect --title "Login redirect repro"` starts a case.
+3. `clipcase add` stores piped text with `--source` and `--tag` labels.
+4. `clipcase search redirect` finds the relevant entry offline.
+5. `clipcase export login-redirect --out handoff.md` produces the shareable
+   Markdown bundle.
+
+## Fixture-backed demo
+
+```sh
+npm run build
+bash demo/run-bug-handoff.sh
+```
+
+The script creates a temporary case, captures repro and terminal fixtures,
+exports `handoff.md`, verifies key text, and confirms secret-like input is
+blocked.
+
+## Guardrails
+
+- ClipCase is local-first and does not sync cases.
+- Secret detection is conservative; review exported casefiles before sharing.
+- Binary attachments and background watchers are outside the current scope.

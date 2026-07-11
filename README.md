@@ -52,13 +52,58 @@ npm test 2>&1 | clipcase add failing-test --source "npm test" --tag failure
 clipcase export failing-test --out handoff.md
 ```
 
-For a fixture-backed demo that builds a temporary case, searches it, and exports a handoff, run:
+For a reproducible fixture-backed demo that builds a temporary case, searches it,
+and exports a handoff, run:
 
 ```sh
 bash demo/run-agent-handoff.sh
 ```
 
-See [docs/tutorials/agent-handoff-casefile.md](docs/tutorials/agent-handoff-casefile.md) and [docs/promo/agent-handoff-hooks.md](docs/promo/agent-handoff-hooks.md) for the walkthrough and promotion notes.
+See [docs/tutorials/agent-handoff-casefile.md](docs/tutorials/agent-handoff-casefile.md)
+for the walkthrough.
+
+Promotion support drafts live in [docs/promo/video-brief-agent-handoff.md](docs/promo/video-brief-agent-handoff.md)
+and [docs/promo/social-hooks.md](docs/promo/social-hooks.md).
+
+## Runnable demo
+
+Run a fixture-backed handoff demo from a clean temporary store:
+
+```sh
+npm run build
+bash examples/run-agent-handoff-demo.sh
+```
+
+The demo creates a case, adds a repro fixture and a failing-test note, searches
+the case store, exports Markdown, and verifies the exported handoff.
+
+## Demo and Promotion
+
+- [Agent handoff casefile demo](docs/tutorials/agent-handoff-casefile.md)
+- [Video brief](docs/promo/video-brief.md)
+- [Social hooks](docs/promo/social-hooks.md)
+
+For a reproducible fixture-backed handoff, run:
+
+```sh
+npm run build
+bash demo/run-bug-handoff.sh
+```
+
+The demo captures repro notes and terminal output from
+`examples/bug-handoff`, exports a Markdown handoff, and verifies that
+secret-like input is blocked by default.
+
+For a fuller copy-paste support workflow, see
+[examples/support-handoff-demo.md](examples/support-handoff-demo.md). A short,
+fact-grounded promotion pack lives in
+[docs/promo/social-hooks.md](docs/promo/social-hooks.md).
+
+For a searchable support handoff that writes JSON, text, and Markdown artifacts,
+run `bash demo/run-search-pack.sh` and follow
+[docs/tutorials/searchable-support-handoff.md](docs/tutorials/searchable-support-handoff.md).
+The matching recording outline is
+[docs/promo/search-pack-video-brief.md](docs/promo/search-pack-video-brief.md).
 
 ## Verify
 
@@ -78,3 +123,16 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [SECURITY.md](SECURITY.md). Please do
 ## License
 
 MIT
+
+## Release verification
+
+Run the same checks locally before opening a release PR:
+
+```bash
+npm run check
+npm test
+npm run build
+npm run smoke
+npm run package:smoke
+npm run release:check
+```

@@ -1,34 +1,43 @@
-# Build An Agent Handoff Casefile
+# Agent Handoff Casefile Demo
 
-This walkthrough uses the checked-in repro fixture to create a local ClipCase case, search it, and export a Markdown handoff.
+This recipe shows how to turn a repro note and a failing command note into one
+Markdown handoff bundle. It uses a temporary storage directory, so the
+repository checkout stays clean.
 
-## Run The Demo
+## Prerequisites
+
+```sh
+npm install
+npm run build
+```
+
+## Run the demo
 
 ```sh
 bash demo/run-agent-handoff.sh
 ```
 
-The script builds the CLI, creates a temporary `.clipcase` store, adds `fixtures/repro.txt`, searches for `expired`, and exports `handoff.md`.
+The script performs the full local flow:
 
-## Manual Steps
+- initializes ClipCase storage in a temporary directory
+- creates a `failing-login` case
+- adds `fixtures/repro.txt` as a tagged repro entry
+- adds a short failing-test note from stdin
+- searches for `redirect`
+- exports `handoff.md`
+- checks that the exported Markdown contains the case title and source label
+
+An alternate example script is available at
+`examples/run-agent-handoff-demo.sh`.
+
+## Adapt it
+
+Use the same pattern during a debugging session:
 
 ```sh
-npm run build
-tmpdir="$(mktemp -d)"
-cd "$tmpdir"
-node /path/to/clipcase/dist/src/cli.js init --storage .clipcase
-node /path/to/clipcase/dist/src/cli.js new login-redirect --title "Login redirect repro"
-node /path/to/clipcase/dist/src/cli.js add login-redirect --source terminal --tag repro < /path/to/clipcase/fixtures/repro.txt
-node /path/to/clipcase/dist/src/cli.js search expired
-node /path/to/clipcase/dist/src/cli.js export login-redirect --out handoff.md
+clipcase new failing-test --title "Failing test handoff"
+npm test 2>&1 | clipcase add failing-test --source "npm test" --tag failure
+clipcase export failing-test --out handoff.md
 ```
 
-## What To Show
-
-- The case name, title, source label, and tags are preserved in the exported Markdown.
-- Search works offline against the saved entry text.
-- The demo uses a temporary directory and does not sync content anywhere.
-
-## Verification
-
-The demo checks that the case appears in `clipcase list`, that search returns the case, and that the exported Markdown contains the title and repro heading.
+ClipCase stores text locally and blocks likely secrets unless `--allow-secret` is passed intentionally.

@@ -1,0 +1,13 @@
+Steps to reproduce
+
+1. Open the checkout on a feature branch.
+2. Run npm test.
+3. Observe the failing assertion in the login redirect test.
+
+Observed:
+
+The redirect keeps the expired session cookie and loops back to /login.
+
+Expected:
+
+The redirect clears the expired cookie and lands on /dashboard.
