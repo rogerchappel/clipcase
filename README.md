@@ -52,6 +52,14 @@ npm test 2>&1 | clipcase add failing-test --source "npm test" --tag failure
 clipcase export failing-test --out handoff.md
 ```
 
+For a fixture-backed demo that builds a temporary case, searches it, and exports a handoff, run:
+
+```sh
+bash demo/run-agent-handoff.sh
+```
+
+See [docs/tutorials/agent-handoff-casefile.md](docs/tutorials/agent-handoff-casefile.md) and [docs/promo/agent-handoff-hooks.md](docs/promo/agent-handoff-hooks.md) for the walkthrough and promotion notes.
+
 ## Verify
 
 ```sh
