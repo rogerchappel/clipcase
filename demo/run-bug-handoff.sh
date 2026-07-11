@@ -30,4 +30,3 @@ fi
 grep -q "Refusing to save" "$tmp/secret.err"
 
 echo "Demo casefile: $tmp/handoff.md"
-

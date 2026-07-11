@@ -1,6 +1,8 @@
 # Agent Handoff Casefile Demo
 
-This recipe shows how to turn a repro note and a failing command note into one Markdown handoff bundle. It uses a temporary storage directory, so the repository checkout stays clean.
+This recipe shows how to turn a repro note and a failing command note into one
+Markdown handoff bundle. It uses a temporary storage directory, so the
+repository checkout stays clean.
 
 ## Prerequisites
 
@@ -12,7 +14,7 @@ npm run build
 ## Run the demo
 
 ```sh
-bash examples/run-agent-handoff-demo.sh
+bash demo/run-agent-handoff.sh
 ```
 
 The script performs the full local flow:
@@ -24,6 +26,9 @@ The script performs the full local flow:
 - searches for `redirect`
 - exports `handoff.md`
 - checks that the exported Markdown contains the case title and source label
+
+An alternate example script is available at
+`examples/run-agent-handoff-demo.sh`.
 
 ## Adapt it
 

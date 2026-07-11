@@ -2,16 +2,19 @@
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-OUT="$ROOT/.tmp/demo-agent-handoff"
+TMPDIR="$(mktemp -d)"
+trap 'rm -rf "$TMPDIR"' EXIT
 
-rm -rf "$OUT"
-mkdir -p "$OUT"
+npm --prefix "$ROOT" run build >/dev/null
 
-npm run build
-
-cd "$OUT"
+cd "$TMPDIR"
 node "$ROOT/dist/src/cli.js" init --storage .clipcase
-node "$ROOT/dist/src/cli.js" new failing-test --title "Failing test handoff"
+node "$ROOT/dist/src/cli.js" new failing-login --title "Failing login handoff"
+
+node "$ROOT/dist/src/cli.js" add failing-login \
+  --source terminal \
+  --tag repro \
+  --tag auth < "$ROOT/fixtures/repro.txt"
 
 cat > repro.txt <<'EOF'
 Command: npm test
@@ -25,15 +28,14 @@ Next useful check:
   npm test -- login-redirect
 EOF
 
-node "$ROOT/dist/src/cli.js" add failing-test --source "npm test" --tag failure < repro.txt
-node "$ROOT/dist/src/cli.js" list
-node "$ROOT/dist/src/cli.js" search redirect
-node "$ROOT/dist/src/cli.js" export failing-test --out handoff.md
+node "$ROOT/dist/src/cli.js" add failing-login --source "npm test" --tag failure < repro.txt
+node "$ROOT/dist/src/cli.js" list | grep -q 'failing-login'
+node "$ROOT/dist/src/cli.js" search redirect | grep -q 'failing-login'
+node "$ROOT/dist/src/cli.js" export failing-login --out handoff.md
 
-grep -q "Failing test handoff" handoff.md
+grep -q "Failing login handoff" handoff.md
 grep -q "npm test" handoff.md
 grep -q "next=/settings" handoff.md
 
-echo
-echo "Demo artifacts written to $OUT"
-echo "  $OUT/handoff.md"
+echo "Demo case exported to $TMPDIR/handoff.md"
+sed -n '1,40p' handoff.md
