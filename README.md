@@ -136,3 +136,5 @@ npm run smoke
 npm run package:smoke
 npm run release:check
 ```
+
+`npm run package:smoke` verifies required package files and the installed `clipcase` CLI help.
