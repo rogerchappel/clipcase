@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
+import { execFileSync, spawnSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -43,6 +43,20 @@ describe('clipcase CLI', () => {
     assert.match(run(['list'], cwd), /bug-login/);
     assert.match(run(['search', 'cookie'], cwd), /bug-login/);
     assert.match(run(['export', 'bug-login'], cwd), /expired cookie causes redirect failure/);
+  });
+
+  it('rejects case names that resolve outside the configured store', async () => {
+    const cwd = await tmp();
+
+    run(['init', '--storage', 'store'], cwd);
+    const result = spawnSync(process.execPath, [cliPath, 'new', '..'], { cwd, encoding: 'utf8' });
+
+    assert.notEqual(result.status, 0);
+    assert.match(result.stderr, /Invalid case name/);
+    await assert.rejects(fs.access(path.join(cwd, 'index.json')));
+    await assert.rejects(fs.access(path.join(cwd, 'store', 'index.json')));
+    assert.match(run(['new', 'normal-case'], cwd), /Created case normal-case/);
+    await fs.access(path.join(cwd, 'store', 'normal-case', 'index.json'));
   });
 
   it('rejects unknown commands with usage', async () => {

@@ -6,7 +6,7 @@ import type { AddEntryInput, CaseMetadata, EntryMetadata } from './types.js';
 import { escapeMarkdown, formatTags, sha256, shortHash, slugify, toPosix } from './util.js';
 const INDEX_FILE = 'index.json';
 export async function ensureStore(storageDir: string): Promise<void> { await fs.mkdir(storageDir, { recursive: true }); }
-export function caseDir(storageDir: string, caseName: string): string { return path.join(storageDir, slugify(caseName)); }
+export function caseDir(storageDir: string, caseName: string): string { const root = path.resolve(storageDir); const dir = path.resolve(root, slugify(caseName)); if (dir === root || path.dirname(dir) !== root) throw new ClipcaseError(`Invalid case name: ${caseName}`); return dir; }
 async function indexPath(storageDir: string, caseName: string): Promise<string> { return path.join(caseDir(storageDir, caseName), INDEX_FILE); }
 export async function loadCase(storageDir: string, caseName: string): Promise<CaseMetadata> { try { return JSON.parse(await fs.readFile(await indexPath(storageDir, caseName), 'utf8')) as CaseMetadata; } catch { throw new ClipcaseError(`Case not found: ${caseName}`, 2); } }
 async function saveCase(storageDir: string, meta: CaseMetadata): Promise<void> { meta.entries.sort((a, b) => a.id.localeCompare(b.id)); await fs.writeFile(await indexPath(storageDir, meta.name), JSON.stringify(meta, null, 2) + '\n'); }
