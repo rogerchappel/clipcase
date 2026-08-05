@@ -20,6 +20,10 @@ function run(args: string[], cwd: string, input?: string): string {
   });
 }
 
+function runResult(args: string[], cwd: string, input?: string) {
+  return spawnSync(process.execPath, [cliPath, ...args], { cwd, encoding: 'utf8', input });
+}
+
 describe('clipcase CLI', () => {
   it('prints current casefile commands in help output', async () => {
     const cwd = await tmp();
@@ -66,5 +70,58 @@ describe('clipcase CLI', () => {
       () => run(['convert', 'helloWorld', 'snake'], cwd),
       /Unknown command: convert/,
     );
+  });
+
+  it('rejects unknown options and missing option values with usage', async () => {
+    const cwd = await tmp();
+
+    for (const args of [
+      ['init', '--storag', 'store'],
+      ['init', '--storage'],
+      ['new', 'case', '--title'],
+      ['add', 'case', '--source'],
+      ['add', 'case', '--tag'],
+      ['export', 'case', '--out'],
+    ]) {
+      const result = runResult(args, cwd);
+      assert.notEqual(result.status, 0, args.join(' '));
+      assert.match(result.stderr, /Usage:/, args.join(' '));
+    }
+  });
+
+  it('rejects invalid boolean values and command arity errors with usage', async () => {
+    const cwd = await tmp();
+
+    for (const args of [
+      ['list', '--json=maybe'],
+      ['init', 'unexpected'],
+      ['list', 'unexpected'],
+      ['new'],
+      ['new', 'one', 'two'],
+      ['show'],
+      ['show', 'one', 'two'],
+      ['search'],
+      ['export'],
+      ['export', 'one', 'two'],
+    ]) {
+      const result = runResult(args, cwd);
+      assert.notEqual(result.status, 0, args.join(' '));
+      assert.match(result.stderr, /Usage:/, args.join(' '));
+    }
+  });
+
+  it('accepts equals syntax plus repeated and comma-separated tags', async () => {
+    const cwd = await tmp();
+
+    run(['init', '--storage=store'], cwd);
+    run(['new', 'valid', '--title=Valid Case'], cwd);
+    run(['add', 'valid', '--source=fixture', '--tag=one,two', '--tag', 'three'], cwd, 'documented forms\n');
+
+    const shown = JSON.parse(run(['show', 'valid'], cwd)) as { title: string; entries: Array<{ source: string; tags: string[] }> };
+    assert.equal(shown.title, 'Valid Case');
+    assert.equal(shown.entries[0].source, 'fixture');
+    assert.deepEqual(shown.entries[0].tags, ['one', 'three', 'two']);
+    assert.doesNotMatch(run(['list', '--json=false'], cwd), /^\[/);
+    assert.match(run(['list', '--json=true'], cwd), /^\[/);
   });
 });
