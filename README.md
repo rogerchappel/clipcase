@@ -4,8 +4,19 @@ ClipCase is a local-first TypeScript CLI for turning copied context, terminal ou
 
 ## Quick start
 
+ClipCase is not published to the npm registry yet. Until it is, build and
+install the package tarball from a clean checkout:
+
 ```sh
-npm install -g clipcase
+git clone https://github.com/rogerchappel/clipcase.git
+cd clipcase
+npm ci
+npm run build
+CLIPCASE_TMP="$(mktemp -d)"
+CLIPCASE_TARBALL="$(npm pack --pack-destination "$CLIPCASE_TMP")"
+npm install --global --prefix "$CLIPCASE_TMP/install" "$CLIPCASE_TMP/$CLIPCASE_TARBALL"
+export PATH="$CLIPCASE_TMP/install/bin:$PATH"
+
 clipcase init
 clipcase new bug-login --title "Login redirect bug"
 pbpaste | clipcase add bug-login --source terminal --tag repro
@@ -138,3 +149,8 @@ npm run release:check
 ```
 
 `npm run package:smoke` verifies required package files and the installed `clipcase` CLI help.
+
+Version tags currently build a package tarball and attach it to a GitHub
+release. They do not publish ClipCase to the npm registry. The release workflow
+and this installation guidance must be updated together when registry
+publication is enabled.
