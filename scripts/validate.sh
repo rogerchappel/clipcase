@@ -5,4 +5,5 @@ npm run check
 npm run build
 npm run smoke
 npm run package:smoke
+npm run release:contract
 if command -v agent-qc >/dev/null 2>&1; then agent-qc ready; else echo "agent-qc not installed; skipping"; fi
