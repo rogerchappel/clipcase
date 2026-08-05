@@ -12,9 +12,10 @@ git clone https://github.com/rogerchappel/clipcase.git
 cd clipcase
 npm ci
 npm run build
-npm pack --pack-destination /tmp
-npm install --global --prefix /tmp/clipcase-install /tmp/clipcase-0.1.0.tgz
-export PATH="/tmp/clipcase-install/bin:$PATH"
+CLIPCASE_TMP="$(mktemp -d)"
+CLIPCASE_TARBALL="$(npm pack --pack-destination "$CLIPCASE_TMP")"
+npm install --global --prefix "$CLIPCASE_TMP/install" "$CLIPCASE_TMP/$CLIPCASE_TARBALL"
+export PATH="$CLIPCASE_TMP/install/bin:$PATH"
 
 clipcase init
 clipcase new bug-login --title "Login redirect bug"
