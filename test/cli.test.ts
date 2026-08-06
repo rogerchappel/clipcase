@@ -49,6 +49,23 @@ describe('clipcase CLI', () => {
     assert.match(run(['export', 'bug-login'], cwd), /expired cookie causes redirect failure/);
   });
 
+  it('captures repeated identical input without overwriting an entry', async () => {
+    const cwd = await tmp();
+
+    run(['init'], cwd);
+    run(['new', 'duplicates'], cwd);
+    for (let attempt = 0; attempt < 4; attempt += 1) run(['add', 'duplicates'], cwd, 'identical capture\n');
+
+    const shown = JSON.parse(run(['show', 'duplicates'], cwd)) as { entries: Array<{ id: string; path: string; hash: string; bytes: number }> };
+    assert.equal(shown.entries.length, 4);
+    assert.equal(new Set(shown.entries.map((entry) => entry.id)).size, 4);
+    assert.equal(new Set(shown.entries.map((entry) => entry.path)).size, 4);
+    assert.equal(new Set(shown.entries.map((entry) => entry.hash)).size, 1);
+    assert.deepEqual(new Set(shown.entries.map((entry) => entry.bytes)), new Set([18]));
+    assert.equal(run(['search', 'identical'], cwd).trim().split('\n').length, 4);
+    assert.match(run(['export', 'duplicates'], cwd), /- Entries: 4/);
+  });
+
   it('rejects case names that resolve outside the configured store', async () => {
     const cwd = await tmp();
 
