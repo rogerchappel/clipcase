@@ -8,3 +8,6 @@ ClipCase stores plain files so users can inspect, diff, back up, or delete casef
 - `entries/*.md` contains front matter, hash metadata, and fenced plaintext.
 
 Entry IDs are timestamp plus content hash prefix: `YYYYMMDDTHHMMSSZ-<12 hex>`.
+If that ID already exists, ClipCase appends a zero-padded collision counter, starting
+at `-000001`. This preserves both identical captures made within the same second
+while keeping filenames and index ordering deterministic.
