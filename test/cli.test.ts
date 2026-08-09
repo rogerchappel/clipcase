@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test';
 import assert from 'node:assert/strict';
-import { execFileSync, spawnSync } from 'node:child_process';
+import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
@@ -22,6 +22,18 @@ function run(args: string[], cwd: string, input?: string): string {
 
 function runResult(args: string[], cwd: string, input?: string) {
   return spawnSync(process.execPath, [cliPath, ...args], { cwd, encoding: 'utf8', input });
+}
+
+function runAsync(args: string[], cwd: string, input: string): Promise<{ code: number | null; stdout: string; stderr: string }> {
+  return new Promise((resolve) => {
+    const child = spawn(process.execPath, [cliPath, ...args], { cwd, stdio: ['pipe', 'pipe', 'pipe'] });
+    let stdout = '';
+    let stderr = '';
+    child.stdout.setEncoding('utf8').on('data', (chunk: string) => { stdout += chunk; });
+    child.stderr.setEncoding('utf8').on('data', (chunk: string) => { stderr += chunk; });
+    child.on('close', (code) => resolve({ code, stdout, stderr }));
+    child.stdin.end(input);
+  });
 }
 
 describe('clipcase CLI', () => {
@@ -64,6 +76,28 @@ describe('clipcase CLI', () => {
     assert.deepEqual(new Set(shown.entries.map((entry) => entry.bytes)), new Set([18]));
     assert.equal(run(['search', 'identical'], cwd).trim().split('\n').length, 4);
     assert.match(run(['export', 'duplicates'], cwd), /- Entries: 4/);
+  });
+
+  it('preserves every entry added by concurrent CLI processes', async () => {
+    const cwd = await tmp();
+    const inputs = Array.from({ length: 12 }, (_, index) => `parallel capture ${String(index).padStart(2, '0')}\n`);
+
+    run(['init'], cwd);
+    run(['new', 'concurrent'], cwd);
+    const results = await Promise.all(inputs.map((input) => runAsync(['add', 'concurrent', '--source', 'parallel'], cwd, input)));
+    for (const result of results) {
+      assert.equal(result.code, 0, result.stderr);
+      assert.match(result.stdout, /Added .* to concurrent/);
+    }
+
+    const shown = JSON.parse(run(['show', 'concurrent'], cwd)) as { entries: Array<{ id: string; path: string }> };
+    assert.equal(shown.entries.length, inputs.length);
+    assert.equal(new Set(shown.entries.map((entry) => entry.id)).size, inputs.length);
+    assert.equal(run(['search', 'parallel capture'], cwd).trim().split('\n').length, inputs.length);
+    const exported = run(['export', 'concurrent'], cwd);
+    for (const input of inputs) assert.match(exported, new RegExp(input.trim()));
+    const entryFiles = (await fs.readdir(path.join(cwd, '.clipcase', 'concurrent', 'entries'))).sort();
+    assert.deepEqual(entryFiles, shown.entries.map((entry) => path.basename(entry.path)).sort());
   });
 
   it('rejects case names that resolve outside the configured store', async () => {
