@@ -3,7 +3,7 @@ import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
 import { test } from 'node:test';
-import { addEntry, createCase, exportCase, listCases, loadCase, searchCases } from '../src/index.js';
+import { addEntry, createCase, exportCase, listCases, loadCase, readEntryText, searchCases } from '../src/index.js';
 import { findSecrets } from '../src/secrets.js';
 import { loadConfig, writeConfig } from '../src/config.js';
 async function tmp(): Promise<string> { return fs.mkdtemp(path.join(os.tmpdir(), 'clipcase-test-')); }
@@ -11,4 +11,24 @@ test('creates cases and captures deterministic entry metadata', async () => { co
 test('keeps identical same-second captures as distinct, ordered entries', async () => { const dir = await tmp(); await createCase(dir, 'collision'); const now = new Date('2026-01-01T00:00:01.100Z'); const first = await addEntry(dir, { caseName: 'collision', text: 'same content', now }); const second = await addEntry(dir, { caseName: 'collision', text: 'same content', now: new Date('2026-01-01T00:00:01.900Z') }); assert.equal(first.id, '20260101T000001Z-a636bd7cd420'); assert.equal(second.id, `${first.id}-000001`); assert.notEqual(first.path, second.path); const meta = await loadCase(dir, 'collision'); assert.deepEqual(meta.entries.map((entry) => entry.id), [first.id, second.id]); assert.deepEqual(meta.entries.map((entry) => entry.hash), [first.hash, first.hash]); assert.deepEqual(meta.entries.map((entry) => entry.bytes), [12, 12]); assert.equal((await searchCases(dir, 'same content')).length, 2); const exported = await exportCase(dir, 'collision'); assert.ok(exported.indexOf(`## ${first.id}\n`) < exported.indexOf(`## ${second.id}\n`)); });
 test('blocks likely secrets unless explicitly allowed', async () => { const dir = await tmp(); await createCase(dir, 'secret-case'); await assert.rejects(() => addEntry(dir, { caseName: 'secret-case', text: 'token=abcdefghijklmnopqrstuvwxyz123456' }), /Refusing to save/); const entry = await addEntry(dir, { caseName: 'secret-case', text: 'token=abcdefghijklmnopqrstuvwxyz123456', allowSecret: true }); assert.ok(entry.id); assert.equal(findSecrets('AKIAABCDEFGHIJKLMNOP').length, 1); assert.equal(findSecrets('npm_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL').length, 1); });
 test('lists, searches, and exports case content', async () => { const dir = await tmp(); await createCase(dir, 'bug-login', 'Login Bug'); await addEntry(dir, { caseName: 'bug-login', text: 'expired cookie causes failure', source: 'terminal', tags: ['auth'] }); assert.equal((await listCases(dir)).length, 1); const results = await searchCases(dir, 'cookie'); assert.equal(results.length, 1); const exported = await exportCase(dir, 'bug-login'); assert.match(exported, /# Login Bug/); assert.match(exported, /expired cookie/); });
+test('round-trips arbitrary entry text and safely serializes metadata', async () => {
+  const dir = await tmp();
+  await createCase(dir, 'hostile-markdown');
+  const text = 'before\n```\nmiddle\n`````text\nafter\n';
+  const source = 'terminal\nforged: field [link](https://example.test), "quoted"';
+  const tags = ['comma, tag', 'brackets [x]', 'quote " and ` tick', 'line\nbreak'];
+  const entry = await addEntry(dir, { caseName: 'hostile-markdown', text, source, tags });
+  const meta = await loadCase(dir, 'hostile-markdown');
+  const stored = await fs.readFile(path.join(dir, 'hostile-markdown', entry.path), 'utf8');
+
+  assert.equal(await readEntryText(dir, meta, entry), text);
+  assert.equal(JSON.parse(stored.match(/^source: (.*)$/m)?.[1] ?? ''), source);
+  assert.deepEqual(JSON.parse(stored.match(/^tags: (.*)$/m)?.[1] ?? ''), [...tags].sort());
+  assert.match(stored, /\n``````text\n/);
+
+  const exported = await exportCase(dir, 'hostile-markdown');
+  assert.match(exported, /- Source: `terminal\\nforged: field \[link\]\(https:\/\/example\.test\), \\"quoted\\"`/);
+  assert.match(exported, /- Tags: `brackets \[x\]` `comma, tag` `line\\nbreak` ``quote \\" and ` tick``/);
+  assert.match(exported, /\n``````text\nbefore\n```\nmiddle\n`````text\nafter\n``````\n/);
+});
 test('writes and loads local config', async () => { const dir = await tmp(); await writeConfig('notes', dir); const config = await loadConfig(dir); assert.equal(config.storageDir, path.join(dir, 'notes')); });
