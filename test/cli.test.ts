@@ -61,6 +61,18 @@ describe('clipcase CLI', () => {
     assert.match(run(['export', 'bug-login'], cwd), /expired cookie causes redirect failure/);
   });
 
+  it('creates missing parent directories for an export destination', async () => {
+    const cwd = await tmp();
+
+    run(['init'], cwd);
+    run(['new', 'nested-export'], cwd);
+    run(['add', 'nested-export'], cwd, 'nested export content\n');
+
+    const destination = path.join('nested', 'case.md');
+    assert.equal(run(['export', 'nested-export', '--out', destination], cwd), `Exported nested-export to ${destination}\n`);
+    assert.match(await fs.readFile(path.join(cwd, destination), 'utf8'), /nested export content/);
+  });
+
   it('captures repeated identical input without overwriting an entry', async () => {
     const cwd = await tmp();
 
