@@ -35,7 +35,7 @@ Linux and Windows users can pipe text on stdin. `--clipboard` uses `pbpaste`, `x
 - `clipcase list [--json]` prints case name, entry count, updated timestamp, and title.
 - `clipcase show <case>` prints deterministic JSON metadata.
 - `clipcase search <query> [--json]` searches entry text, tags, and source labels offline.
-- `clipcase export <case> [--out <file>]` produces a single Markdown bundle.
+- `clipcase export <case> [--out <file>]` produces a single Markdown bundle. Without `--out` it writes the bundle to stdout; with `--out` it creates missing parent directories and writes the file.
 
 ## Storage format
 
