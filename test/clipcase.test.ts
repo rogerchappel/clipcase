@@ -8,6 +8,20 @@ import { findSecrets } from '../src/secrets.js';
 import { loadConfig, writeConfig } from '../src/config.js';
 async function tmp(): Promise<string> { return fs.mkdtemp(path.join(os.tmpdir(), 'clipcase-test-')); }
 test('creates cases and captures deterministic entry metadata', async () => { const dir = await tmp(); await createCase(dir, 'Bug Login', 'Bug Login', new Date('2026-01-01T00:00:00.000Z')); const entry = await addEntry(dir, { caseName: 'bug-login', text: 'hello repro\n', source: 'terminal', tags: ['repro'], now: new Date('2026-01-01T00:01:00.000Z') }); assert.equal(entry.id, '20260101T000100Z-4e17aeaa9041'); assert.equal(entry.source, 'terminal'); assert.deepEqual(entry.tags, ['repro']); });
+test('rejects case identifiers that do not produce a meaningful slug', async () => {
+  const dir = await tmp();
+  const existing = await createCase(dir, 'case', 'Existing Case', new Date('2026-01-01T00:00:00.000Z'));
+  const index = path.join(dir, 'case', 'index.json');
+  const before = await fs.readFile(index, 'utf8');
+
+  await assert.rejects(() => createCase(dir, '!!!'), /Invalid case name: !!!/);
+  await assert.rejects(() => loadCase(dir, '@@@'), /Invalid case name: @@@/);
+  await assert.rejects(() => addEntry(dir, { caseName: '###', text: 'must not be saved' }), /Invalid case name: ###/);
+
+  assert.equal(await fs.readFile(index, 'utf8'), before);
+  assert.deepEqual(await fs.readdir(path.join(dir, 'case', 'entries')), []);
+  assert.deepEqual(await loadCase(dir, 'case'), existing);
+});
 test('keeps identical same-second captures as distinct, ordered entries', async () => { const dir = await tmp(); await createCase(dir, 'collision'); const now = new Date('2026-01-01T00:00:01.100Z'); const first = await addEntry(dir, { caseName: 'collision', text: 'same content', now }); const second = await addEntry(dir, { caseName: 'collision', text: 'same content', now: new Date('2026-01-01T00:00:01.900Z') }); assert.equal(first.id, '20260101T000001Z-a636bd7cd420'); assert.equal(second.id, `${first.id}-000001`); assert.notEqual(first.path, second.path); const meta = await loadCase(dir, 'collision'); assert.deepEqual(meta.entries.map((entry) => entry.id), [first.id, second.id]); assert.deepEqual(meta.entries.map((entry) => entry.hash), [first.hash, first.hash]); assert.deepEqual(meta.entries.map((entry) => entry.bytes), [12, 12]); assert.equal((await searchCases(dir, 'same content')).length, 2); const exported = await exportCase(dir, 'collision'); assert.ok(exported.indexOf(`## ${first.id}\n`) < exported.indexOf(`## ${second.id}\n`)); });
 test('blocks likely secrets unless explicitly allowed', async () => { const dir = await tmp(); await createCase(dir, 'secret-case'); await assert.rejects(() => addEntry(dir, { caseName: 'secret-case', text: 'token=abcdefghijklmnopqrstuvwxyz123456' }), /Refusing to save/); const entry = await addEntry(dir, { caseName: 'secret-case', text: 'token=abcdefghijklmnopqrstuvwxyz123456', allowSecret: true }); assert.ok(entry.id); assert.equal(findSecrets('AKIAABCDEFGHIJKLMNOP').length, 1); assert.equal(findSecrets('npm_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL').length, 1); });
 test('lists, searches, and exports case content', async () => { const dir = await tmp(); await createCase(dir, 'bug-login', 'Login Bug'); await addEntry(dir, { caseName: 'bug-login', text: 'expired cookie causes failure', source: 'terminal', tags: ['auth'] }); assert.equal((await listCases(dir)).length, 1); const results = await searchCases(dir, 'cookie'); assert.equal(results.length, 1); const exported = await exportCase(dir, 'bug-login'); assert.match(exported, /# Login Bug/); assert.match(exported, /expired cookie/); });

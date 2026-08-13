@@ -3,7 +3,10 @@
 ClipCase stores plain files so users can inspect, diff, back up, or delete casefiles without the CLI.
 
 - `.clipcase.json` optionally points commands at a storage directory.
-- Each case directory is named with the case slug.
+- Each case directory is named with the case slug. Slugs are lowercase and may
+  contain ASCII letters, digits, `.`, `_`, and `-`; other character runs are
+  normalized to `-`. An identifier must produce a non-empty slug, so blank or
+  punctuation-only identifiers are rejected before case data is read or written.
 - `index.json` contains case metadata and entry metadata.
 - `entries/*.md` contains front matter, hash metadata, and fenced plaintext.
 

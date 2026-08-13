@@ -37,6 +37,12 @@ Linux and Windows users can pipe text on stdin. `--clipboard` uses `pbpaste`, `x
 - `clipcase search <query> [--json]` searches entry text, tags, and source labels offline.
 - `clipcase export <case> [--out <file>]` produces a single Markdown bundle. Without `--out` it writes the bundle to stdout; with `--out` it creates missing parent directories and writes the file.
 
+Case identifiers are trimmed and lowercased; runs of characters outside
+`a-z`, `0-9`, `.`, `_`, and `-` become `-`, and leading or trailing `-`
+characters are removed. The result must contain at least one allowed character:
+identifiers such as `Bug Login` become `bug-login`, while punctuation-only
+identifiers such as `!!!` are rejected instead of being mapped to another case.
+
 ## Storage format
 
 By default ClipCase writes to `.clipcase/`. `clipcase init --storage notes/cases` writes `.clipcase.json`. `CLIPCASE_HOME=/tmp/cases` overrides config.

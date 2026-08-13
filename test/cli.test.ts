@@ -126,6 +126,28 @@ describe('clipcase CLI', () => {
     await fs.access(path.join(cwd, 'store', 'normal-case', 'index.json'));
   });
 
+  it('rejects punctuation-only case identifiers without changing the case slug', async () => {
+    const cwd = await tmp();
+
+    run(['init'], cwd);
+    run(['new', 'case', '--title', 'Existing Case'], cwd);
+    const index = path.join(cwd, '.clipcase', 'case', 'index.json');
+    const before = await fs.readFile(index, 'utf8');
+
+    for (const [args, input] of [
+      [['new', '!!!'], undefined],
+      [['add', '@@@'], 'must not be saved\n'],
+      [['show', '###'], undefined],
+    ] as Array<[string[], string | undefined]>) {
+      const result = runResult(args, cwd, input);
+      assert.notEqual(result.status, 0, args.join(' '));
+      assert.match(result.stderr, /Invalid case name/);
+    }
+
+    assert.equal(await fs.readFile(index, 'utf8'), before);
+    assert.deepEqual(await fs.readdir(path.join(cwd, '.clipcase', 'case', 'entries')), []);
+  });
+
   it('rejects unknown commands with usage', async () => {
     const cwd = await tmp();
 
