@@ -157,6 +157,8 @@ npm run release:check
 `npm run package:smoke` verifies required package files and the installed `clipcase` CLI help.
 
 Version tags currently build a package tarball and attach it to a GitHub
-release. They do not publish ClipCase to the npm registry. The release workflow
-and this installation guidance must be updated together when registry
-publication is enabled.
+release. Before creating the tarball, the workflow requires the tag to exactly
+match `v` plus the version in `package.json` (for example, package version
+`0.1.0` must use tag `v0.1.0`). They do not publish ClipCase to the npm registry.
+The release workflow and this installation guidance must be updated together
+when registry publication is enabled.

@@ -13,6 +13,17 @@ const claimsRegistryInstall = /npm\s+(?:i|install)\s+(?:--global|-g)\s+clipcase(
 );
 const publishesToRegistry = /(?:^|\s)npm\s+publish(?:\s|$)/m.test(releaseWorkflow);
 
+const tagGuard = "node scripts/verify-release-tag.mjs";
+const tagGuardPosition = releaseWorkflow.indexOf(tagGuard);
+const artifactPosition = releaseWorkflow.indexOf("npm pack");
+
+if (tagGuardPosition === -1 || artifactPosition === -1 || tagGuardPosition > artifactPosition) {
+  console.error(
+    "release contract failed: the release tag/package version guard must run before npm pack"
+  );
+  process.exit(1);
+}
+
 if (claimsRegistryInstall && !publishesToRegistry) {
   console.error(
     "release contract failed: README claims a registry install, but the release workflow does not publish to npm"
