@@ -20,6 +20,13 @@ than the longest run found in the captured text. Readers use the indexed byte
 length to recover the exact capture, including whether it ended with a newline.
 Older entries that use the original fixed triple-backtick fence remain readable.
 
+If a case directory has no `index.json`, commands treat it as a missing case and
+`list` ignores that directory. If an index exists but is malformed or cannot be
+read (including when `index.json` is a directory), `list` and case-specific
+commands stop with a diagnostic that names the case and index path. Repair or
+restore that plain JSON file before retrying; ClipCase does not silently discard
+or replace corrupt metadata.
+
 Entry IDs are timestamp plus content hash prefix: `YYYYMMDDTHHMMSSZ-<12 hex>`.
 If that ID already exists, ClipCase appends a zero-padded collision counter, starting
 at `-000001`. This preserves both identical captures made within the same second
