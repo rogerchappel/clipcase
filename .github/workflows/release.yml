@@ -26,7 +26,7 @@ jobs:
           cache: npm
           registry-url: https://registry.npmjs.org
       - name: Install dependencies
-        run: npm ci
+        run: npx --yes npm@10.9.4 ci
       - name: Verify release tag matches package version
         run: node scripts/verify-release-tag.mjs
       - name: Install ReleaseBox
@@ -38,7 +38,7 @@ jobs:
       - name: ReleaseBox readiness check
         run: node /tmp/releasebox/bin/releasebox.js check .
       - name: Run release checks
-        run: npm run release:check
+        run: npx --yes npm@10.9.4 run release:check
       - name: Build package
         run: npm pack
       - name: Generate release notes
