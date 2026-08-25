@@ -124,12 +124,13 @@ The matching recording outline is
 
 ## Verify
 
+Development supports Node.js 20, 22, and 24 with npm 10. The repository pins
+npm 10.9.4 so clean installs use the same lockfile implementation locally and
+in CI.
+
 ```sh
-npm install
-npm test
-npm run check
-npm run build
-npm run smoke
+npx --yes npm@10.9.4 ci
+npx --yes npm@10.9.4 run release:check
 bash scripts/validate.sh
 ```
 
