@@ -2,7 +2,12 @@
 
 ClipCase stores plain files so users can inspect, diff, back up, or delete casefiles without the CLI.
 
-- `.clipcase.json` optionally points commands at a storage directory.
+- `.clipcase.json` optionally points commands at a storage directory. It must be
+  a readable JSON object whose optional `storageDir` value is a string. Relative
+  paths resolve from the directory containing the configuration file; absolute
+  paths and `~/` home-relative paths are also accepted. If the file is unreadable,
+  malformed, or has the wrong shape, ClipCase stops with a concise diagnostic.
+  Repair or replace the file before retrying.
 - Each case directory is named with the case slug. Slugs are lowercase and may
   contain ASCII letters, digits, `.`, `_`, and `-`; other character runs are
   normalized to `-`. An identifier must produce a non-empty slug, so blank or
