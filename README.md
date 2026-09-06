@@ -45,7 +45,7 @@ identifiers such as `!!!` are rejected instead of being mapped to another case.
 
 ## Storage format
 
-By default ClipCase writes to `.clipcase/`. `clipcase init --storage notes/cases` writes `.clipcase.json`. `CLIPCASE_HOME=/tmp/cases` overrides config.
+By default ClipCase writes to `.clipcase/`. `clipcase init --storage notes/cases` writes `.clipcase.json`. Its optional `storageDir` must be a string; relative paths resolve beside the config file. Malformed, unreadable, or wrongly shaped configuration produces a concise repair diagnostic. `CLIPCASE_HOME=/tmp/cases` overrides config.
 
 ```text
 .clipcase/bug-login/

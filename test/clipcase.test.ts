@@ -73,4 +73,4 @@ test('round-trips arbitrary entry text and safely serializes metadata', async ()
   assert.match(exported, /- Tags: `brackets \[x\]` `comma, tag` `line\\nbreak` ``quote \\" and ` tick``/);
   assert.match(exported, /\n``````text\nbefore\n```\nmiddle\n`````text\nafter\n``````\n/);
 });
-test('writes and loads local config', async () => { const dir = await tmp(); await writeConfig('notes', dir); const config = await loadConfig(dir); assert.equal(config.storageDir, path.join(dir, 'notes')); });
+test('writes and loads relative and absolute local config paths', async () => { const dir = await tmp(); await writeConfig('notes', dir); const relative = await loadConfig(dir); assert.equal(relative.storageDir, path.join(dir, 'notes')); const absoluteDir = path.join(await tmp(), 'cases'); await fs.writeFile(path.join(dir, '.clipcase.json'), JSON.stringify({ storageDir: absoluteDir })); const absolute = await loadConfig(dir); assert.equal(absolute.storageDir, absoluteDir); });

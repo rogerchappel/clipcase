@@ -61,6 +61,28 @@ describe('clipcase CLI', () => {
     assert.match(run(['export', 'bug-login'], cwd), /expired cookie causes redirect failure/);
   });
 
+  it('reports invalid and unreadable configuration without a stack trace', async () => {
+    for (const [contents, expected] of [
+      ['{broken\n', /Invalid JSON in .*\.clipcase\.json/],
+      ['[]\n', /must be a JSON object/],
+      ['{"storageDir":42}\n', /storageDir must be a string/],
+    ] as Array<[string, RegExp]>) {
+      const cwd = await tmp();
+      await fs.writeFile(path.join(cwd, '.clipcase.json'), contents);
+      const result = runResult(['list'], cwd);
+      assert.equal(result.status, 1);
+      assert.match(result.stderr, expected);
+      assert.doesNotMatch(result.stderr, /\n\s+at /);
+    }
+
+    const cwd = await tmp();
+    await fs.mkdir(path.join(cwd, '.clipcase.json'));
+    const result = runResult(['list'], cwd);
+    assert.equal(result.status, 1);
+    assert.match(result.stderr, /Cannot read configuration/);
+    assert.doesNotMatch(result.stderr, /\n\s+at /);
+  });
+
   it('creates missing parent directories for an export destination', async () => {
     const cwd = await tmp();
 
