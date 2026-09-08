@@ -53,6 +53,44 @@ test('CLI list and show report corrupt metadata while missing show keeps exit 2'
   assert.equal(missing.status, 2);
   assert.equal(missing.stderr, 'Case not found: missing\n');
 });
+test('rejects valid JSON with malformed case and entry metadata', async () => {
+  const dir = await tmp();
+  await createCase(dir, 'broken');
+  const index = path.join(dir, 'broken', 'index.json');
+  const valid = await loadCase(dir, 'broken');
+  const invalidCases: Array<[unknown, string]> = [
+    [{ name: 'broken' }, 'title'],
+    [{ ...valid, updatedAt: 42 }, 'updatedAt'],
+    [{ ...valid, entries: {} }, 'entries'],
+    [{ ...valid, entries: [{ id: 'entry' }] }, 'entries[0].caseName'],
+    [{ ...valid, entries: [{ id: 'entry', caseName: 'broken', createdAt: valid.createdAt, source: 'stdin', tags: ['ok', 7], hash: 'abc', bytes: 1, path: 'entries/entry.md' }] }, 'entries[0].tags[1]'],
+    [{ ...valid, entries: [{ id: 'entry', caseName: 'broken', createdAt: valid.createdAt, source: 'stdin', tags: [], hash: 'abc', bytes: -1, path: 'entries/entry.md' }] }, 'entries[0].bytes'],
+  ];
+  for (const [metadata, field] of invalidCases) {
+    await fs.writeFile(index, JSON.stringify(metadata));
+    await assert.rejects(() => loadCase(dir, 'broken'), new RegExp(`Invalid case metadata for broken .* ${field.replace(/[\[\].]/g, '\\$&')}`));
+  }
+});
+test('CLI commands reject malformed metadata without a stack trace or partial write', async () => {
+  const cwd = await tmp();
+  await writeConfig('.clipcase', cwd);
+  const storage = path.join(cwd, '.clipcase');
+  const meta = await createCase(storage, 'broken');
+  const index = path.join(storage, 'broken', 'index.json');
+  await fs.writeFile(index, JSON.stringify({ ...meta, entries: [{ id: 'bad' }] }));
+  const commands = [
+    ['list'], ['show', 'broken'], ['search', 'needle'], ['export', 'broken'], ['add', 'broken'],
+  ];
+  for (const args of commands) {
+    const result = args[0] === 'add'
+      ? spawnSync(process.execPath, [path.resolve('dist/src/cli.js'), ...args], { cwd, encoding: 'utf8', input: 'evidence text\n' })
+      : cli(cwd, ...args);
+    assert.equal(result.status, 4, args.join(' '));
+    assert.match(result.stderr, /Invalid case metadata for broken .* entries\[0\]\.caseName/);
+    assert.doesNotMatch(result.stderr, /\n\s+at /);
+  }
+  assert.deepEqual(await fs.readdir(path.join(storage, 'broken', 'entries')), []);
+});
 test('round-trips arbitrary entry text and safely serializes metadata', async () => {
   const dir = await tmp();
   await createCase(dir, 'hostile-markdown');
