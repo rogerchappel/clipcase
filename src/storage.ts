@@ -11,7 +11,7 @@ const LOCK_TIMEOUT_MS = 10_000;
 export async function ensureStore(storageDir: string): Promise<void> { await fs.mkdir(storageDir, { recursive: true }); }
 export function caseDir(storageDir: string, caseName: string): string { const root = path.resolve(storageDir); const slug = slugify(caseName); if (!slug) throw new ClipcaseError(`Invalid case name: ${caseName}`); const dir = path.resolve(root, slug); if (dir === root || path.dirname(dir) !== root) throw new ClipcaseError(`Invalid case name: ${caseName}`); return dir; }
 async function indexPath(storageDir: string, caseName: string): Promise<string> { return path.join(caseDir(storageDir, caseName), INDEX_FILE); }
-export async function loadCase(storageDir: string, caseName: string): Promise<CaseMetadata> { const target = await indexPath(storageDir, caseName); let contents: string; try { contents = await fs.readFile(target, 'utf8'); } catch (error) { if (hasCode(error, 'ENOENT')) throw new ClipcaseError(`Case not found: ${caseName}`, 2); throw new ClipcaseError(`Cannot read case metadata for ${slugify(caseName)} at ${target}: ${errorMessage(error)}`, 4); } try { return JSON.parse(contents) as CaseMetadata; } catch (error) { throw new ClipcaseError(`Invalid case metadata for ${slugify(caseName)} at ${target}: ${errorMessage(error)}`, 4); } }
+export async function loadCase(storageDir: string, caseName: string): Promise<CaseMetadata> { const target = await indexPath(storageDir, caseName); let contents: string; try { contents = await fs.readFile(target, 'utf8'); } catch (error) { if (hasCode(error, 'ENOENT')) throw new ClipcaseError(`Case not found: ${caseName}`, 2); throw new ClipcaseError(`Cannot read case metadata for ${slugify(caseName)} at ${target}: ${errorMessage(error)}`, 4); } try { const value: unknown = JSON.parse(contents); assertCaseMetadata(value); return value; } catch (error) { throw new ClipcaseError(`Invalid case metadata for ${slugify(caseName)} at ${target}: ${errorMessage(error)}`, 4); } }
 async function saveCase(storageDir: string, meta: CaseMetadata): Promise<void> { meta.entries.sort((a, b) => a.id.localeCompare(b.id)); const target = await indexPath(storageDir, meta.name); const temporary = `${target}.${process.pid}.${Date.now()}.tmp`; try { await fs.writeFile(temporary, JSON.stringify(meta, null, 2) + '\n', { flag: 'wx' }); await fs.rename(temporary, target); } finally { await fs.rm(temporary, { force: true }); } }
 async function withCaseLock<T>(storageDir: string, caseName: string, operation: () => Promise<T>): Promise<T> { const lock = path.join(caseDir(storageDir, caseName), LOCK_DIR); const deadline = Date.now() + LOCK_TIMEOUT_MS; while (true) { try { await fs.mkdir(lock); break; } catch (error) { if (!isAlreadyExists(error)) throw error; if (Date.now() >= deadline) throw new ClipcaseError(`Timed out waiting to update case: ${slugify(caseName)}`, 4); await new Promise((resolve) => setTimeout(resolve, LOCK_RETRY_MS)); } } try { return await operation(); } finally { await fs.rmdir(lock).catch(() => undefined); } }
 export async function createCase(storageDir: string, name: string, title?: string, now = new Date()): Promise<CaseMetadata> { const slug = slugify(name); const dir = caseDir(storageDir, name); await ensureStore(storageDir); await fs.mkdir(path.join(dir, 'entries'), { recursive: true }); const createdAt = now.toISOString(); const meta: CaseMetadata = { name: slug, title: title ?? slug, createdAt, updatedAt: createdAt, entries: [] }; await fs.writeFile(path.join(dir, INDEX_FILE), JSON.stringify(meta, null, 2) + '\n', { flag: 'wx' }); return meta; }
@@ -20,6 +20,22 @@ export async function addEntry(storageDir: string, input: AddEntryInput): Promis
 function isAlreadyExists(error: unknown): boolean { return error instanceof Error && 'code' in error && error.code === 'EEXIST'; }
 function hasCode(error: unknown, code: string): boolean { return error instanceof Error && 'code' in error && error.code === code; }
 function errorMessage(error: unknown): string { return error instanceof Error ? error.message : String(error); }
+function isRecord(value: unknown): value is Record<string, unknown> { return typeof value === 'object' && value !== null && !Array.isArray(value); }
+function requireString(record: Record<string, unknown>, field: string, location = field): void { if (typeof record[field] !== 'string') throw new Error(`${location} must be a string`); }
+function assertEntryMetadata(value: unknown, index: number): asserts value is EntryMetadata {
+  const location = `entries[${index}]`;
+  if (!isRecord(value)) throw new Error(`${location} must be an object`);
+  for (const field of ['id', 'caseName', 'createdAt', 'source', 'hash', 'path']) requireString(value, field, `${location}.${field}`);
+  if (!Array.isArray(value.tags)) throw new Error(`${location}.tags must be an array`);
+  for (let tag = 0; tag < value.tags.length; tag += 1) if (typeof value.tags[tag] !== 'string') throw new Error(`${location}.tags[${tag}] must be a string`);
+  if (!Number.isSafeInteger(value.bytes) || (value.bytes as number) < 0) throw new Error(`${location}.bytes must be a non-negative integer`);
+}
+function assertCaseMetadata(value: unknown): asserts value is CaseMetadata {
+  if (!isRecord(value)) throw new Error('metadata must be an object');
+  for (const field of ['name', 'title', 'createdAt', 'updatedAt']) requireString(value, field);
+  if (!Array.isArray(value.entries)) throw new Error('entries must be an array');
+  value.entries.forEach(assertEntryMetadata);
+}
 function fenceFor(text: string): string { const longest = Math.max(0, ...Array.from(text.matchAll(/`+/g), (match) => match[0].length)); return '`'.repeat(Math.max(3, longest + 1)); }
 function serializedLabel(value: string): string { return JSON.stringify(value).slice(1, -1); }
 function codeSpan(value: string): string { const serialized = serializedLabel(value); const longest = Math.max(0, ...Array.from(serialized.matchAll(/`+/g), (match) => match[0].length)); const delimiter = '`'.repeat(longest + 1); return `${delimiter}${serialized}${delimiter}`; }
