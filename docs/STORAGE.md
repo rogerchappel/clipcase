@@ -26,11 +26,12 @@ length to recover the exact capture, including whether it ended with a newline.
 Older entries that use the original fixed triple-backtick fence remain readable.
 
 If a case directory has no `index.json`, commands treat it as a missing case and
-`list` ignores that directory. If an index exists but is malformed or cannot be
-read (including when `index.json` is a directory), `list` and case-specific
-commands stop with a diagnostic that names the case and index path. Repair or
-restore that plain JSON file before retrying; ClipCase does not silently discard
-or replace corrupt metadata.
+`list` ignores that directory. If an index exists but is malformed, has missing
+or wrongly typed case or entry fields, or cannot be read (including when
+`index.json` is a directory), `list` and case-specific commands stop with a
+diagnostic that names the case, index path, and invalid field. Repair or restore
+that plain JSON file before retrying; ClipCase does not silently discard or
+replace corrupt metadata, and `add` does not leave a partial entry behind.
 
 Entry IDs are timestamp plus content hash prefix: `YYYYMMDDTHHMMSSZ-<12 hex>`.
 If that ID already exists, ClipCase appends a zero-padded collision counter, starting
