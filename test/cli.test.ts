@@ -61,6 +61,22 @@ describe('clipcase CLI', () => {
     assert.match(run(['export', 'bug-login'], cwd), /expired cookie causes redirect failure/);
   });
 
+  it('shows a search snippet centered around the matching text', async () => {
+    const cwd = await tmp();
+    run(['init'], cwd);
+    run(['new', 'snippet-case'], cwd);
+    const content = `${'opening context '.repeat(12)}distinctive needle ${'closing context '.repeat(12)}`;
+    run(['add', 'snippet-case'], cwd, content);
+
+    const output = run(['search', 'needle'], cwd);
+    assert.match(output, /distinctive needle closing context/);
+    assert.match(output, /…/);
+    assert.doesNotMatch(output, /opening context opening context opening context/);
+    const result = JSON.parse(run(['search', 'needle', '--json'], cwd)) as Array<{ preview: string }>;
+    assert.match(result[0].preview, /distinctive needle/);
+    assert.ok(result[0].preview.length < content.length);
+  });
+
   it('reports invalid and unreadable configuration without a stack trace', async () => {
     for (const [contents, expected] of [
       ['{broken\n', /Invalid JSON in .*\.clipcase\.json/],
