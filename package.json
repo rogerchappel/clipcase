@@ -30,7 +30,7 @@
     "smoke": "npm run build && bash scripts/smoke.sh",
     "package:smoke": "node scripts/pack-smoke.mjs",
     "release:contract": "node scripts/release-contract.mjs",
-    "release:check": "npm test && npm run check && npm run build && npm run smoke && npm run package:smoke && npm run release:contract"
+    "release:check": "npm test && npm run check && npm run build && npm run smoke && npm run package:smoke && npm run release:contract && bash scripts/validate.sh"
   },
   "keywords": [
     "cli",
