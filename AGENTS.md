@@ -5,10 +5,10 @@ This file defines how AI agents and human maintainers should work in `clipcase`.
 ## Project Context
 
 - Project: `clipcase`
-- Repository: ``
-- Primary maintainer: ``
-- Default branch: ``
-- Package manager: ``
+- Repository: `rogerchappel/clipcase`
+- Primary maintainer: `Roger Chappel`
+- Default branch: `main`
+- Package manager: `npm`
 - Primary verification command: `bash scripts/validate.sh`
 
 ## Core Principle
