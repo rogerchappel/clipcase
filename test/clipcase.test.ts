@@ -80,6 +80,16 @@ test('blocks likely secrets unless explicitly allowed', async () => {
   assert.equal(findSecrets('npm_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL').length, 1);
 });
 
+test('findSecrets returns deterministic results across repeated calls', () => {
+  const matchingText = 'AKIAABCDEFGHIJKLMNOP';
+  const expected = findSecrets(matchingText);
+
+  assert.equal(expected.length, 1);
+  assert.deepEqual(findSecrets(matchingText), expected);
+  assert.deepEqual(findSecrets('ordinary clipboard text'), []);
+  assert.deepEqual(findSecrets(matchingText), expected);
+});
+
 test('lists, searches, and exports case content', async () => {
   const dir = await tmp();
   await createCase(dir, 'bug-login', 'Login Bug');
