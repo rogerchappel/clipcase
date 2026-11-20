@@ -10,6 +10,10 @@ const validationEntrypoint = await readFile(
   "utf8"
 );
 
+test("npm test includes compiled TypeScript tests and tracked JavaScript contract tests", () => {
+  assert.equal(packageJson.scripts.test, "node --test dist/**/*.test.js test/*.test.mjs");
+});
+
 test("release:check runs every required validation step before optional agent-qc", () => {
   const commands = packageJson.scripts["release:check"].split("&&").map((part) => part.trim());
   const required = [
@@ -19,6 +23,7 @@ test("release:check runs every required validation step before optional agent-qc
     "npm run smoke",
     "npm run package:smoke",
     "npm run release:contract",
+    "npm run workflow:contract",
     "bash scripts/validate.sh",
   ];
 
