@@ -172,6 +172,21 @@ test('CLI commands reject malformed metadata without a stack trace or partial wr
   }
   assert.deepEqual(await fs.readdir(path.join(storage, 'broken', 'entries')), []);
 });
+test('rejects truncated or tampered entry content using stored byte count and hash', async () => {
+  const dir = await tmp();
+  await createCase(dir, 'integrity');
+  const entry = await addEntry(dir, { caseName: 'integrity', text: 'original evidence\n' });
+  const filename = path.join(dir, 'integrity', entry.path);
+  const original = await fs.readFile(filename);
+
+  await fs.writeFile(filename, original.subarray(0, original.length - 8));
+  const meta = await loadCase(dir, 'integrity');
+  await assert.rejects(() => readEntryText(dir, meta, entry), /Corrupt entry .*expected .* bytes, found/);
+
+  await fs.writeFile(filename, original.toString('utf8').replace('original evidence', 'tampered evidence'));
+  await assert.rejects(() => readEntryText(dir, meta, entry), /content integrity check failed/);
+});
+
 test('round-trips arbitrary entry text and safely serializes metadata', async () => {
   const dir = await tmp();
   await createCase(dir, 'hostile-markdown');
