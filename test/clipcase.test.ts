@@ -172,6 +172,17 @@ test('CLI commands reject malformed metadata without a stack trace or partial wr
   }
   assert.deepEqual(await fs.readdir(path.join(storage, 'broken', 'entries')), []);
 });
+test('rejects entry paths that escape the case entries directory', async () => {
+  const dir = await tmp();
+  const meta = await createCase(dir, 'path-guard');
+  const outside = path.join(dir, 'outside.md');
+  await fs.writeFile(outside, 'outside data');
+  const malicious = { id: 'outside', caseName: meta.name, createdAt: meta.createdAt, source: 'stdin', tags: [], hash: '0'.repeat(64), bytes: 12, path: '../outside.md' };
+
+  await assert.rejects(() => readEntryText(dir, meta, malicious), /Invalid entry path .* expected a file directly inside entries/);
+  assert.equal(await fs.readFile(outside, 'utf8'), 'outside data');
+});
+
 test('rejects truncated or tampered entry content using stored byte count and hash', async () => {
   const dir = await tmp();
   await createCase(dir, 'integrity');
