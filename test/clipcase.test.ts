@@ -80,6 +80,20 @@ test('blocks likely secrets unless explicitly allowed', async () => {
   assert.equal(findSecrets('npm_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKL').length, 1);
 });
 
+test('findSecrets detects shorter GitHub token formats without returning matched values', () => {
+  const tokens = [
+    `ghp_${'A'.repeat(24)}`,
+    `ghs_${'b'.repeat(24)}`,
+    `github_pat_${'C'.repeat(24)}`,
+  ];
+
+  for (const token of tokens) {
+    const findings = findSecrets(`credential=${token}`);
+    assert.deepEqual(findings.map(({ label }) => label), ['GitHub token']);
+    assert.equal(JSON.stringify(findings).includes(token), false);
+  }
+});
+
 test('findSecrets returns deterministic results across repeated calls', () => {
   const matchingText = 'AKIAABCDEFGHIJKLMNOP';
   const expected = findSecrets(matchingText);
